@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 import randovania
+from randovania.interface_common import update_checker
 from randovania.interface_common.cosmetic_patches import CosmeticPatches
 from randovania.interface_common.editable_object import EditableObject
 from randovania.interface_common.serializer import identity, Serializer, return_with_default
@@ -19,16 +20,17 @@ _SERIALIZER_FOR_FIELD = {
 
 class UserPreferences(EditableObject):
     _last_changelog_displayed: str
+    _output_directory: Optional[Path] = None
+
     _advanced_validate_seed_after: Optional[bool] = None
     _advanced_timeout_during_generation: Optional[bool] = None
     _seed_number: Optional[int] = None
     _create_spoiler: Optional[bool] = None
-    _output_directory: Optional[Path] = None
     _cosmetic_patches: Optional[CosmeticPatches] = None
     _selected_options_preset: Optional[str] = None
 
     def __init__(self):
-        self._last_changelog_displayed = randovania.VERSION
+        self._last_changelog_displayed = str(update_checker.strict_current_version())
 
     # Reset
     def reset_to_defaults(self):

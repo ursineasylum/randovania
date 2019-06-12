@@ -67,7 +67,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, TabService, BackgroundTaskMixin):
         self.background_tasks_button_lock_signal.connect(self.enable_buttons_with_background_tasks)
         self.progress_update_signal.connect(self.update_progress)
         self.stop_background_process_button.clicked.connect(self.stop_background_process)
-        self.preferences_changed_signal.connect(self.on_options_changed)
+        self.preferences_changed_signal.connect(self.on_preferences_changed)
 
         # Menu Bar
         self.menu_action_data_visualizer.triggered.connect(self._open_data_visualizer)
@@ -188,9 +188,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, TabService, BackgroundTaskMixin):
 
         self.user_preferences.on_changes = self.preferences_changed_signal.emit
         with self.user_preferences:
-            self.on_options_changed()
+            self.on_preferences_changed()
 
-    def on_options_changed(self):
+    def on_preferences_changed(self):
         for window in self.windows:
             window.user_preferences = self.user_preferences
 
