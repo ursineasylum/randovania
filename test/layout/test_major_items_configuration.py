@@ -11,8 +11,8 @@ from randovania.layout.major_items_configuration import MajorItemsConfiguration
 
 @pytest.fixture(
     params=[
-        {"encoded": b'\xe0\x04 ', "replace": {}},
-        {"encoded": b'\xe0\xa1 B', "replace": {
+        {"encoded": b'\xff\xff\xff\xff\xfc\x90', "replace": {}},
+        {"encoded": b'\xff\xff\xe9?\xff\xf2@', "replace": {
             "items_state": {
                 "Spider Ball": {
                     "include_copy_in_original_location": True,
@@ -21,6 +21,16 @@ from randovania.layout.major_items_configuration import MajorItemsConfiguration
                     "included_ammo": [],
                     "allowed_as_random_starting_item": False
                 }
+            }
+        }},
+        {"encoded": b'\xf8\x911"x\x84q\x08\xff\xfe!\x1e$LO\xc9', "replace": {
+            "items_state": {
+                item: {
+                    "num_shuffled_pickups": 2,
+                    "included_ammo": [35] if ("Beam" in item or "Launcher" in item) else [],
+                }
+                for item in ("Dark Visor", "Echo Visor", "Dark Suit", "Light Suit", "Light Beam",
+                             "Dark Beam", "Seeker Launcher", "Super Missile", "Sunburst", "Sonic Boom")
             }
         }},
     ],

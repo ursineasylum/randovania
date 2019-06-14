@@ -1,6 +1,6 @@
 import copy
 import dataclasses
-from typing import Dict, Iterator, Tuple, List
+from typing import Dict, Iterator, Tuple
 
 from randovania.bitpacking import bitpacking
 from randovania.bitpacking.bitpacking import BitPackValue, BitPackDecoder
@@ -8,7 +8,7 @@ from randovania.game_description.item.item_database import ItemDatabase
 from randovania.game_description.item.major_item import MajorItem
 from randovania.layout.major_item_state import MajorItemState
 
-RANDOM_STARTING_ITEMS_LIMIT = 31
+RANDOM_STARTING_ITEMS_LIMIT = (4, 32)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -59,46 +59,34 @@ class MajorItemsConfiguration(BitPackValue):
         yield from bitpacking.encode_bool(self.progressive_launcher)
         default = MajorItemsConfiguration.default()
 
-        result: List[Tuple[int, MajorItem, MajorItemState]] = []
-        for i, (item, state) in enumerate(self.items_state.items()):
-            if state != default.items_state[item]:
-                result.append((i, item, state))
+        for item, state in self.items_state.items():
+            is_default = state == default.items_state[item]
+            yield from bitpacking.encode_bool(is_default)
+            if not is_default:
+                yield from state.bit_pack_encode(item)
 
-        yield len(result), len(self.items_state)
-        for index, _, _ in result:
-            yield index, len(self.items_state)
-
-        for index, item, state in result:
-            yield from state.bit_pack_encode(item)
-
-        yield self.minimum_random_starting_items, RANDOM_STARTING_ITEMS_LIMIT
-        yield self.maximum_random_starting_items, RANDOM_STARTING_ITEMS_LIMIT
+        yield from bitpacking.encode_int_with_limits(self.minimum_random_starting_items, RANDOM_STARTING_ITEMS_LIMIT)
+        yield from bitpacking.encode_int_with_limits(self.maximum_random_starting_items, RANDOM_STARTING_ITEMS_LIMIT)
 
     @classmethod
     def bit_pack_unpack(cls, decoder: BitPackDecoder, metadata) -> "MajorItemsConfiguration":
-        from randovania.game_description import default_database
-        item_database = default_database.default_prime2_item_database()
-
         progressive_suit = bitpacking.decode_bool(decoder)
         progressive_grapple = bitpacking.decode_bool(decoder)
         progressive_launcher = bitpacking.decode_bool(decoder)
 
         default = MajorItemsConfiguration.default()
-        num_items = decoder.decode_single(len(default.items_state))
-        indices_with_custom = {
-            decoder.decode_single(len(default.items_state))
-            for _ in range(num_items)
-        }
 
         items_state = {}
 
-        for index, item in enumerate(item_database.major_items.values()):
-            if index in indices_with_custom:
-                items_state[item] = MajorItemState.bit_pack_unpack(decoder, item)
+        for item, default_state in default.items_state.items():
+            is_default = bitpacking.decode_bool(decoder)
+            if is_default:
+                items_state[item] = default_state
             else:
-                items_state[item] = default.items_state[item]
+                items_state[item] = MajorItemState.bit_pack_unpack(decoder, item)
 
-        minimum, maximum = decoder.decode(RANDOM_STARTING_ITEMS_LIMIT, RANDOM_STARTING_ITEMS_LIMIT)
+        minimum = bitpacking.decode_int_with_limits(decoder, RANDOM_STARTING_ITEMS_LIMIT)
+        maximum = bitpacking.decode_int_with_limits(decoder, RANDOM_STARTING_ITEMS_LIMIT)
 
         return cls(items_state,
                    progressive_suit=progressive_suit,
