@@ -11,11 +11,20 @@ from randovania.layout.ammo_configuration import AmmoConfiguration
 
 @pytest.fixture(
     params=[
-        {"encoded": b'\x00', "items_state": {}},
-        {"encoded": b'!@', "maximum_ammo": {"45": 20}},
-        {"encoded": b'\x02\x0c\x80', "items_state": {"Missile Expansion": {"variance": 0, "pickup_count": 12}}},
-        {"encoded": b'!B\x0c\x80', "maximum_ammo": {"45": 20},
+        {"encoded": b'\xff\x80', "items_state": {}},
+        {"encoded": b'\xfc\xa1H', "maximum_ammo": {"45": 20, "43": 5}},
+        {"encoded": b'\x19\xff', "items_state": {"Missile Expansion": {"variance": 0, "pickup_count": 12}}},
+        {"encoded": b'\x19\xfc)',
+         "maximum_ammo": {"45": 20},
          "items_state": {"Missile Expansion": {"variance": 0, "pickup_count": 12}}},
+        {"encoded": b'=\x0b==\x8bif\xe0',
+         "maximum_ammo": {"44": 45, "43": 10, "45": 150, "46": 220, },
+         "items_state": {
+             "Missile Expansion": {"variance": 0, "pickup_count": 30},
+             "Power Bomb Expansion": {"variance": 0, "pickup_count": 5},
+             "Dark Ammo Expansion": {"variance": 0, "pickup_count": 30},
+             "Light Ammo Expansion": {"variance": 0, "pickup_count": 30},
+         }}
     ],
     name="config_with_data")
 def _config_with_data(request):
@@ -51,4 +60,5 @@ def test_encode(config_with_data):
     result = bitpacking.pack_value(value)
 
     # Assert
+    print(len(result), len(expected))
     assert result == expected

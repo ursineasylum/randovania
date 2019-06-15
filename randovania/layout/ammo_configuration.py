@@ -1,7 +1,8 @@
 import copy
 from dataclasses import dataclass
-from typing import Dict, Iterator, Tuple, List
+from typing import Dict, Iterator, Tuple
 
+from randovania.bitpacking import bitpacking
 from randovania.bitpacking.bitpacking import BitPackValue, BitPackDecoder
 from randovania.game_description.item.ammo import Ammo
 from randovania.game_description.item.item_database import ItemDatabase
@@ -15,54 +16,50 @@ class AmmoConfiguration(BitPackValue):
 
     def bit_pack_encode(self, metadata) -> Iterator[Tuple[int, int]]:
         default = AmmoConfiguration.default()
+        strict_maximum: Dict[int, int] = {}
 
+        # Ammo States
+        for item, state in self.items_state.items():
+            for ammo_index in item.items:
+                strict_maximum[ammo_index] = item.maximum
+
+            is_default = state == default.items_state[item]
+            yield from bitpacking.encode_bool(is_default)
+            if not is_default:
+                yield from state.bit_pack_encode(item)
+
+        # Maximum Ammo
         for key, value in self.maximum_ammo.items():
-            yield int(value != default.maximum_ammo[key]), 2
-
-        for key, value in self.maximum_ammo.items():
-            if value != default.maximum_ammo[key]:
-                yield value, 256
-
-        result: List[Tuple[int, Ammo, AmmoState]] = []
-        for i, (item, state) in enumerate(self.items_state.items()):
-            if state != default.items_state[item]:
-                result.append((i, item, state))
-
-        yield len(result), len(self.items_state)
-        for index, _, _ in result:
-            yield index, len(self.items_state)
-
-        for index, _, state in result:
-            yield from state.bit_pack_encode({})
+            is_default = value == default.maximum_ammo[key]
+            yield from bitpacking.encode_bool(is_default)
+            if not is_default:
+                yield value, strict_maximum[key] + 1
 
     @classmethod
     def bit_pack_unpack(cls, decoder: BitPackDecoder, metadata):
-        from randovania.game_description import default_database
-        item_database = default_database.default_prime2_item_database()
-
         default = cls.default()
-        has_value = {
-            item_key: bool(decoder.decode_single(2))
-            for item_key in default.maximum_ammo.keys()
-        }
+        strict_maximum: Dict[int, int] = {}
 
-        maximum_ammo = {
-            item_key: decoder.decode_single(256) if has_value[item_key] else default.maximum_ammo[item_key]
-            for item_key, default_value in default.maximum_ammo.items()
-        }
-
-        num_items = decoder.decode_single(len(default.items_state))
-        indices_with_custom = {
-            decoder.decode_single(len(default.items_state))
-            for _ in range(num_items)
-        }
-
+        # Ammo States
         items_state = {}
-        for index, item in enumerate(item_database.ammo.values()):
-            if index in indices_with_custom:
-                items_state[item] = AmmoState.bit_pack_unpack(decoder, {})
+        for item, default_state in default.items_state.items():
+            for ammo_index in item.items:
+                strict_maximum[ammo_index] = item.maximum
+
+            is_default = bitpacking.decode_bool(decoder)
+            if is_default:
+                items_state[item] = default_state
             else:
-                items_state[item] = default.items_state[item]
+                items_state[item] = AmmoState.bit_pack_unpack(decoder, {})
+
+        # Maximum Ammo
+        maximum_ammo = {}
+        for key, value in default.maximum_ammo.items():
+            is_default = bitpacking.decode_bool(decoder)
+            if is_default:
+                maximum_ammo[key] = value
+            else:
+                maximum_ammo[key] = decoder.decode_single(strict_maximum[key])
 
         return cls(maximum_ammo, items_state)
 
