@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from randovania.layout.layout_configuration import LayoutConfiguration, LayoutElevators, \
-    LayoutSkyTempleKeyMode
+    LayoutSkyTempleKeyMode, LayoutDamageStrictness
 from randovania.layout.patcher_configuration import PatcherConfiguration
 from randovania.layout.permalink import Permalink
 from randovania.layout.trick_level import LayoutTrickLevel, TrickLevelConfiguration
@@ -25,7 +25,7 @@ def test_encode(mock_dictionary_byte_hash: MagicMock):
 
     # Assert
     mock_dictionary_byte_hash.assert_called_once_with(link.layout_configuration.game_data)
-    assert encoded == "cAAAfRePAAACxgAAAc3q"
+    assert encoded == "gAAAfRePAAABsYAAAHNAnA=="
 
 
 @pytest.mark.parametrize("invalid", [
@@ -53,6 +53,7 @@ def test_decode_invalid(invalid: str):
     LayoutConfiguration.default(),
     LayoutConfiguration.from_params(
         trick_level_configuration=TrickLevelConfiguration(LayoutTrickLevel.HARD),
+        damage_strictness=LayoutDamageStrictness.STRICT,
         sky_temple_keys=LayoutSkyTempleKeyMode.ALL_GUARDIANS,
         elevators=LayoutElevators.RANDOMIZED,
     ),
@@ -94,7 +95,7 @@ def test_decode(mock_dictionary_byte_hash: MagicMock):
 
     # This test should break whenever we change how permalinks are created
     # When this happens, we must bump the permalink version and change the tests
-    encoded = "cAAAfReLCAAC5gAAAc0p"
+    encoded = "gAAAfReLCAABuYAAAHNAtw=="
 
     expected = Permalink(
         seed_number=1000,
@@ -126,7 +127,7 @@ def test_decode_mock_other(mock_packer_unpack: MagicMock,
                            mock_layout_unpack: MagicMock,
                            ):
 
-    encoded = "cAAAfRggwQ=="
+    encoded = "gAAAfRggLQ=="
     patcher_configuration = mock_packer_unpack.return_value
     layout_configuration = mock_layout_unpack.return_value
 

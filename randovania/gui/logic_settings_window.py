@@ -19,7 +19,7 @@ from randovania.gui.main_window import MainWindow
 from randovania.gui.trick_details_popup import TrickDetailsPopup
 from randovania.interface_common.options import Options
 from randovania.layout.hint_configuration import SkyTempleKeyHintMode
-from randovania.layout.layout_configuration import LayoutElevators, LayoutSkyTempleKeyMode
+from randovania.layout.layout_configuration import LayoutElevators, LayoutSkyTempleKeyMode, LayoutDamageStrictness
 from randovania.layout.starting_location import StartingLocationConfiguration, StartingLocation
 from randovania.layout.translator_configuration import LayoutTranslatorRequirement
 from randovania.layout.trick_level import LayoutTrickLevel, TrickLevelConfiguration
@@ -112,6 +112,7 @@ class LogicSettingsWindow(QMainWindow, Ui_LogicSettingsWindow):
 
         # Update with Options
         self.setup_trick_level_elements()
+        self.setup_damage_strictness_elements()
         self.setup_elevator_elements()
         self.setup_sky_temple_elements()
         self.setup_starting_area_elements()
@@ -144,6 +145,9 @@ class LogicSettingsWindow(QMainWindow, Ui_LogicSettingsWindow):
             slider.setEnabled(has_specific_level)
             slider.setValue(trick_level_configuration.level_for_trick(trick).as_number)
             checkbox.setChecked(has_specific_level)
+
+        # Damage
+        set_combo_with_value(self.damage_strictness_combo, options.layout_configuration_damage_strictness)
 
         # Elevator
         set_combo_with_value(self.elevators_combo, options.layout_configuration_elevators)
@@ -333,6 +337,17 @@ class LogicSettingsWindow(QMainWindow, Ui_LogicSettingsWindow):
             difficulty,
         )
         self._trick_details_popup.show()
+
+    # Damage strictness
+    def setup_damage_strictness_elements(self):
+        self.damage_strictness_combo.setItemData(0, LayoutDamageStrictness.STRICT)
+        self.damage_strictness_combo.setItemData(1, LayoutDamageStrictness.MEDIUM)
+        self.damage_strictness_combo.setItemData(2, LayoutDamageStrictness.LENIENT)
+
+        self.damage_strictness_combo.options_field_name = "layout_configuration_damage_strictness"
+        self.damage_strictness_combo.currentIndexChanged.connect(functools.partial(_update_options_by_value,
+                                                                                   self._options,
+                                                                                   self.damage_strictness_combo))
 
     # Elevator
     def setup_elevator_elements(self):

@@ -8,7 +8,7 @@ from randovania.bitpacking.bitpacking import BitPackDecoder, BitPackValue
 from randovania.layout.ammo_configuration import AmmoConfiguration
 from randovania.layout.hint_configuration import HintConfiguration
 from randovania.layout.layout_configuration import LayoutConfiguration, LayoutSkyTempleKeyMode, \
-    LayoutElevators
+    LayoutElevators, LayoutDamageStrictness
 from randovania.layout.major_items_configuration import MajorItemsConfiguration
 from randovania.layout.starting_location import StartingLocation
 from randovania.layout.translator_configuration import TranslatorConfiguration
@@ -27,21 +27,25 @@ class DummyValue(BitPackValue):
 
 @pytest.fixture(
     params=[
-        {"encoded": b'\xb4',
+        {"encoded": b'm',
          "sky_temple": LayoutSkyTempleKeyMode.NINE,
          "elevators": LayoutElevators.VANILLA,
+         "damage_strictness": LayoutDamageStrictness.STRICT,
          },
-        {"encoded": b'\x04',
+        {"encoded": b'A',
          "sky_temple": LayoutSkyTempleKeyMode.ALL_BOSSES,
          "elevators": LayoutElevators.VANILLA,
+         "damage_strictness": LayoutDamageStrictness.MEDIUM,
          },
-        {"encoded": b'L',
+        {"encoded": b'S',
          "sky_temple": LayoutSkyTempleKeyMode.TWO,
          "elevators": LayoutElevators.RANDOMIZED,
+         "damage_strictness": LayoutDamageStrictness.MEDIUM,
          },
-        {"encoded": b'\x1c',
+        {"encoded": b'G',
          "sky_temple": LayoutSkyTempleKeyMode.ALL_GUARDIANS,
          "elevators": LayoutElevators.RANDOMIZED,
+         "damage_strictness": LayoutDamageStrictness.LENIENT,
          },
     ],
     name="layout_config_with_data")
@@ -89,6 +93,7 @@ def test_encode(layout_config_with_data):
 
     # Run
     result = bitpacking.pack_value(value)
+    print(result)
 
     # Assert
     assert result == expected
