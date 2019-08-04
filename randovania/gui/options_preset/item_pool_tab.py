@@ -152,7 +152,7 @@ class ItemPoolTab(OptionsPresetBaseTab):
             _update_ammo_visibility(self._ammo_pickup_widgets[item], layout.split_beam_ammo)
 
         # Randomization Mode
-        set_combo_with_value(self.randomization_mode_combo, options.randomization_mode)
+        set_combo_with_value(self.editor.randomization_mode_combo, layout.randomization_mode)
 
         # Random Starting Items
         self.editor.minimum_starting_spinbox.setValue(major_configuration.minimum_random_starting_items)
@@ -365,13 +365,13 @@ class ItemPoolTab(OptionsPresetBaseTab):
     # Randomization Mode
 
     def _setup_randomization_mode_combo(self):
-        self.randomization_mode_combo.setItemData(0, RandomizationMode.FULL)
-        self.randomization_mode_combo.setItemData(1, RandomizationMode.MAJOR_MINOR_SPLIT)
-        self.randomization_mode_combo.currentIndexChanged.connect(self._on_update_randomization_mode)
+        self.editor.randomization_mode_combo.setItemData(0, RandomizationMode.FULL)
+        self.editor.randomization_mode_combo.setItemData(1, RandomizationMode.MAJOR_MINOR_SPLIT)
+        self.editor.randomization_mode_combo.currentIndexChanged.connect(self._on_update_randomization_mode)
 
     def _on_update_randomization_mode(self):
-        with self._options as options:
-            options.randomization_mode = self.randomization_mode_combo.currentData()
+        with self.editor as editor:
+            editor.set_layout_field("randomization_mode", self.editor.randomization_mode_combo.currentData())
 
     # Random Starting
 
