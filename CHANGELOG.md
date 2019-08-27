@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   *Major* - Added: Title screen now shows a three-word representation of the seed hash.
 
+-   *Major" - Changed: The hint placement algorithm was changed so that hints are more likely to be useful.
+
 -   Fixed: Minimal Checking now correctly handles progressive suit and grapple.
 
 -   Changed: Screw Attacking without Space Jump Boots in Hive Temple is no longer required on No Tricks.
